@@ -27,8 +27,7 @@ import {
 import { Config, UseReadContractParameters, UseWatchContractEventParameters, UseWriteContractParameters } from "wagmi";
 import { WriteContractParameters, WriteContractReturnType, simulateContract } from "wagmi/actions";
 import { WriteContractVariables } from "wagmi/query";
-import deployedContractsData from "~~/contracts/deployedContracts";
-import externalContractsData from "~~/contracts/externalContracts";
+import deployedContractsData from "~~/contracts/externalContracts";
 import scaffoldConfig from "~~/scaffold.config";
 
 type AddExternalFlag<T> = {
@@ -59,7 +58,8 @@ const deepMergeContracts = <L extends Record<PropertyKey, any>, E extends Record
   return result as MergeDeepRecord<AddExternalFlag<L>, AddExternalFlag<E>, { arrayMergeMode: "replace" }>;
 };
 
-const contractsData = deepMergeContracts(deployedContractsData, externalContractsData);
+import externalContractsData from "~~/contracts/externalContracts";
+const contractsData = deepMergeContracts(deployedContractsData, externalContractsData || {});
 
 export type InheritedFunctions = { readonly [key: string]: string };
 

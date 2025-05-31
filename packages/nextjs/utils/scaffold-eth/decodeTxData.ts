@@ -1,14 +1,13 @@
 import { TransactionWithFunction } from "./block";
 import { GenericContractsDeclaration } from "./contract";
 import { Abi, AbiFunction, decodeFunctionData, getAbiItem } from "viem";
-import { hardhat } from "viem/chains";
-import contractData from "~~/contracts/deployedContracts";
+import deployedContractsData from "~~/contracts/externalContracts";
 
 type ContractsInterfaces = Record<string, Abi>;
 type TransactionType = TransactionWithFunction | null;
 
-const deployedContracts = contractData as GenericContractsDeclaration | null;
-const chainMetaData = deployedContracts?.[hardhat.id];
+const deployedContracts = deployedContractsData as GenericContractsDeclaration;
+const chainMetaData = deployedContracts?.[545]; // Flow EVM Testnet Chain ID
 const interfaces = chainMetaData
   ? Object.entries(chainMetaData).reduce((finalInterfacesObj, [contractName, contract]) => {
       finalInterfacesObj[contractName] = contract.abi;
