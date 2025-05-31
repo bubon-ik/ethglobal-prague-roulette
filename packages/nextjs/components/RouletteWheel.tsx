@@ -3,12 +3,15 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useScaffoldWriteContract, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { useNotification } from '@blockscout/app-sdk';
 
 export const RouletteWheel = () => {
   const { address } = useAccount();
   const [isSpinning, setIsSpinning] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [lastSpinResult, setLastSpinResult] = useState<string | null>(null);
+  
+  // Только уведомления Blockscout
+  const { showNotification } = useNotification();
 
   const { data: sitesCount } = useScaffoldReadContract({
     contractName: "Roulette",
@@ -51,7 +54,6 @@ export const RouletteWheel = () => {
     return () => clearInterval(interval);
   }, [timeUntilNextSpin]);
 
-  // Обновленный форматтер времени для секунд
   const formatTime = (seconds: number): string => {
     if (seconds < 60) {
       return `${seconds} sec`;
@@ -65,30 +67,33 @@ export const RouletteWheel = () => {
     if (!address || isSpinning || timeLeft > 0) return;
 
     setIsSpinning(true);
-    setLastSpinResult(null);
     
     try {
-      const result = await spin({
+      showNotification({
+        type: 'pending',
+        title: '🎰 Spinning the Roulette!',
+        description: 'Your transaction is being processed...',
+      });
+
+      await spin({
         functionName: "spin",
         args: [],
       });
-      
-      // Показываем успешное сообщение
-      setLastSpinResult("🎉 Spin successful! Check your latest discovery below!");
-      
-      // Автоматически скрываем сообщение через 3 секунды
-      setTimeout(() => {
-        setLastSpinResult(null);
-      }, 3000);
+
+      showNotification({
+        type: 'success',
+        title: '🎉 Spin Successful!',
+        description: 'You discovered a new website! Check below.',
+      });
       
     } catch (error) {
       console.error("Spin failed:", error);
-      setLastSpinResult("❌ Spin failed. Please try again!");
       
-      // Скрываем ошибку через 3 секунды
-      setTimeout(() => {
-        setLastSpinResult(null);
-      }, 3000);
+      showNotification({
+        type: 'error',
+        title: '❌ Spin Failed',
+        description: 'Transaction failed. Please try again.',
+      });
     } finally {
       setIsSpinning(false);
     }
@@ -98,19 +103,7 @@ export const RouletteWheel = () => {
 
   return (
     <div className="text-center">
-      {/* Title */}
       <h2 className="text-3xl font-bold text-gray-800 mb-8">🎰 Spin the Roulette!</h2>
-      
-      {/* Spin Result Message */}
-      {lastSpinResult && (
-        <div className={`mb-6 p-4 rounded-lg border-2 ${
-          lastSpinResult.includes('successful') 
-            ? 'bg-green-50 border-green-300 text-green-800' 
-            : 'bg-red-50 border-red-300 text-red-800'
-        }`}>
-          {lastSpinResult}
-        </div>
-      )}
       
       {/* Roulette Wheel */}
       <div className="mb-8">
@@ -126,7 +119,7 @@ export const RouletteWheel = () => {
           {/* Indicator Arrow */}
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-red-500 drop-shadow-lg"></div>
           
-          {/* Decorative dots around the wheel */}
+          {/* Decorative dots */}
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-yellow-400 rounded-full"></div>
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-green-400 rounded-full"></div>
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-red-400 rounded-full"></div>
@@ -189,14 +182,24 @@ export const RouletteWheel = () => {
           <div className="text-sm text-gray-700 break-all mb-4 bg-white rounded-lg p-3 border border-gray-200 font-mono">
             {lastSiteUrl}
           </div>
-          <a 
-            href={lastSiteUrl.startsWith('http') ? lastSiteUrl : `https://${lastSiteUrl}`}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
-          >
-            🚀 Visit Site
-          </a>
+          <div className="flex gap-3 justify-center">
+            <a 
+              href={lastSiteUrl.startsWith('http') ? lastSiteUrl : `https://${lastSiteUrl}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
+            >
+              🚀 Visit Site
+            </a>
+            <a
+              href={`https://evm-testnet.flowscan.io/address/${address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
+            >
+              📊 View on FlowScan
+            </a>
+          </div>
         </div>
       )}
 
@@ -206,7 +209,7 @@ export const RouletteWheel = () => {
           💡 <strong>How it works:</strong> Spin to discover new websites! You can spin once every <strong>10 seconds</strong>.
         </div>
         <div className="text-xs text-gray-500 mt-2">
-          Built on Flow EVM Testnet • ETHGlobal Prague 2025
+          Built on Flow EVM Testnet • ETHGlobal Prague 2025 • Powered by Blockscout
         </div>
       </div>
     </div>
