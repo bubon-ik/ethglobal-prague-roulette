@@ -7,7 +7,7 @@ contract Roulette {
         string url;
         bool isActive;
     }
-
+    // some coments
     Site[] public sites;
     mapping(address => uint256[]) public userSpins;
     mapping(string => bool) public urlExists; // Для исключения дубликатов
