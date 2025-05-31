@@ -1,0 +1,36 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Roulette.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.25;\n\ncontract Roulette {\n    struct Site {\n        uint256 id;\n        string url;\n        bool isActive;\n    }\n    \n    Site[] public sites;\n    mapping(string => bool) public urlExists;\n    mapping(address => uint256) public lastSpinTime;\n    mapping(address => uint256[]) public userSpins;\n    mapping(address => mapping(uint256 => bool)) public hasSpun;\n    \n    uint256 public constant SPIN_COOLDOWN = 10 seconds; // Для демо на хакатоне\n    \n    event SiteAdded(uint256 id, string url);\n    event SiteSpinned(uint256 siteId, string url);\n    \n    constructor() {\n        // Начальные сайты для демонстрации\n        addSite(\"https://ethereum.org\");\n        addSite(\"https://github.com\");\n        addSite(\"https://stackoverflow.com\");\n        addSite(\"https://flow.com\");\n        addSite(\"https://scaffold-eth.io\");\n        addSite(\"https://ethglobal.com\");\n    }\n    \n    function addSite(string memory _url) public {\n        require(bytes(_url).length > 0, \"URL cannot be empty\");\n        require(!urlExists[_url], \"URL already exists\");\n        \n        uint256 newId = sites.length;\n        sites.push(Site(newId, _url, true));\n        urlExists[_url] = true;\n        \n        emit SiteAdded(newId, _url);\n    }\n    \n    function spin() public returns (uint256) {\n        require(sites.length > 0, \"No sites available\");\n        require(\n            block.timestamp >= lastSpinTime[msg.sender] + SPIN_COOLDOWN,\n            \"Cooldown period not finished\"\n        );\n        \n        uint256[] memory availableSites = new uint256[](sites.length);\n        uint256 availableCount = 0;\n        \n        for (uint256 i = 0; i < sites.length; i++) {\n            if (sites[i].isActive && !hasSpun[msg.sender][i]) {\n                availableSites[availableCount] = i;\n                availableCount++;\n            }\n        }\n        \n        require(availableCount > 0, \"No new sites available for this user\");\n        \n        uint256 randomIndex = uint256(\n            keccak256(\n                abi.encodePacked(\n                    block.timestamp,\n                    block.prevrandao,\n                    msg.sender,\n                    sites.length\n                )\n            )\n        ) % availableCount;\n        \n        uint256 selectedSiteId = availableSites[randomIndex];\n        \n        lastSpinTime[msg.sender] = block.timestamp;\n        userSpins[msg.sender].push(selectedSiteId);\n        hasSpun[msg.sender][selectedSiteId] = true;\n        \n        emit SiteSpinned(selectedSiteId, sites[selectedSiteId].url);\n        \n        return selectedSiteId;\n    }\n    \n    function getSitesCount() public view returns (uint256) {\n        return sites.length;\n    }\n    \n    function getSite(uint256 _id) public view returns (string memory) {\n        require(_id < sites.length, \"Site does not exist\");\n        return sites[_id].url;\n    }\n    \n    function getUserSpins(address _user) public view returns (uint256[] memory) {\n        return userSpins[_user];\n    }\n    \n    function hasUserSpunSite(address _user, uint256 _siteId) public view returns (bool) {\n        return hasSpun[_user][_siteId];\n    }\n    \n    function getTimeUntilNextSpin(address _user) public view returns (uint256) {\n        uint256 nextSpinTime = lastSpinTime[_user] + SPIN_COOLDOWN;\n        if (block.timestamp >= nextSpinTime) {\n            return 0;\n        }\n        return nextSpinTime - block.timestamp;\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

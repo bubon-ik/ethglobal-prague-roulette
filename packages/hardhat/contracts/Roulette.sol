@@ -7,83 +7,102 @@ contract Roulette {
         string url;
         bool isActive;
     }
-    // some coments
+    
     Site[] public sites;
+    mapping(string => bool) public urlExists;
+    mapping(address => uint256) public lastSpinTime;
     mapping(address => uint256[]) public userSpins;
-    mapping(string => bool) public urlExists; // Для исключения дубликатов
-    mapping(address => mapping(uint256 => bool)) public hasSpun; // Для исключения повторений
-    mapping(address => uint256) public lastSpinTime; // Время последнего спина
-
-    uint256 public constant SPIN_COOLDOWN = 12 hours; // Ограничение в 12 часов
-
+    mapping(address => mapping(uint256 => bool)) public hasSpun;
+    
+    uint256 public constant SPIN_COOLDOWN = 10 seconds; // Для демо на хакатоне
+    
     event SiteAdded(uint256 id, string url);
     event SiteSpinned(uint256 siteId, string url);
-
-    constructor() {}
-
-    function addSite(string memory _url) public {
-        require(!urlExists[_url], "Site already exists");
-        sites.push(Site(sites.length, _url, true));
-        urlExists[_url] = true;
-        emit SiteAdded(sites.length - 1, _url);
+    
+    constructor() {
+        // Начальные сайты для демонстрации
+        addSite("https://ethereum.org");
+        addSite("https://github.com");
+        addSite("https://stackoverflow.com");
+        addSite("https://flow.com");
+        addSite("https://scaffold-eth.io");
+        addSite("https://ethglobal.com");
     }
-
+    
+    function addSite(string memory _url) public {
+        require(bytes(_url).length > 0, "URL cannot be empty");
+        require(!urlExists[_url], "URL already exists");
+        
+        uint256 newId = sites.length;
+        sites.push(Site(newId, _url, true));
+        urlExists[_url] = true;
+        
+        emit SiteAdded(newId, _url);
+    }
+    
     function spin() public returns (uint256) {
-        // Проверка времени последнего спина
-        require(block.timestamp >= lastSpinTime[msg.sender] + SPIN_COOLDOWN, "You can only spin once every 12 hours");
         require(sites.length > 0, "No sites available");
-
-        // Подсчитываем доступные сайты, которые пользователь еще не получил
+        require(
+            block.timestamp >= lastSpinTime[msg.sender] + SPIN_COOLDOWN,
+            "Cooldown period not finished"
+        );
+        
+        uint256[] memory availableSites = new uint256[](sites.length);
         uint256 availableCount = 0;
+        
         for (uint256 i = 0; i < sites.length; i++) {
             if (sites[i].isActive && !hasSpun[msg.sender][i]) {
+                availableSites[availableCount] = i;
                 availableCount++;
             }
         }
+        
         require(availableCount > 0, "No new sites available for this user");
-
-        // Выбираем случайный сайт из доступных
-        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender))) % availableCount;
-        uint256 selectedId = 0;
-        for (uint256 i = 0; i < sites.length; i++) {
-            if (sites[i].isActive && !hasSpun[msg.sender][i]) {
-                if (randomIndex == 0) {
-                    selectedId = i;
-                    break;
-                }
-                randomIndex--;
-            }
-        }
-
-        // Обновляем время спина
+        
+        uint256 randomIndex = uint256(
+            keccak256(
+                abi.encodePacked(
+                    block.timestamp,
+                    block.prevrandao,
+                    msg.sender,
+                    sites.length
+                )
+            )
+        ) % availableCount;
+        
+        uint256 selectedSiteId = availableSites[randomIndex];
+        
         lastSpinTime[msg.sender] = block.timestamp;
-        userSpins[msg.sender].push(selectedId);
-        hasSpun[msg.sender][selectedId] = true;
-        emit SiteSpinned(selectedId, sites[selectedId].url);
-        return selectedId;
+        userSpins[msg.sender].push(selectedSiteId);
+        hasSpun[msg.sender][selectedSiteId] = true;
+        
+        emit SiteSpinned(selectedSiteId, sites[selectedSiteId].url);
+        
+        return selectedSiteId;
     }
-
+    
     function getSitesCount() public view returns (uint256) {
         return sites.length;
     }
-
+    
     function getSite(uint256 _id) public view returns (string memory) {
-        require(_id < sites.length, "Invalid site ID");
+        require(_id < sites.length, "Site does not exist");
         return sites[_id].url;
     }
-
+    
     function getUserSpins(address _user) public view returns (uint256[] memory) {
         return userSpins[_user];
     }
-
+    
     function hasUserSpunSite(address _user, uint256 _siteId) public view returns (bool) {
         return hasSpun[_user][_siteId];
     }
-
+    
     function getTimeUntilNextSpin(address _user) public view returns (uint256) {
-        if (block.timestamp >= lastSpinTime[_user] + SPIN_COOLDOWN) {
+        uint256 nextSpinTime = lastSpinTime[_user] + SPIN_COOLDOWN;
+        if (block.timestamp >= nextSpinTime) {
             return 0;
         }
-        return (lastSpinTime[_user] + SPIN_COOLDOWN) - block.timestamp;
+        return nextSpinTime - block.timestamp;
     }
 }

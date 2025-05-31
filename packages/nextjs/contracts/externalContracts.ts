@@ -3,7 +3,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const externalContracts = {
   545: {
     Roulette: {
-      address: "0x429264643025c8a0aC9f8b4D758737B8e9628ADf",
+      address: "0xf5c9b2c8747Bfc7f71bD911d5a134585fa69FFEf",
       abi: [
         {
           "inputs": [],
@@ -296,9 +296,9 @@ const externalContracts = {
           "stateMutability": "view",
           "type": "function"
         }
-      ]
-    }
-  }
+      ], // ДОБАВЛЕНА ЗАПЯТАЯ!
+    },
+  },
 } as const satisfies GenericContractsDeclaration;
 
 export default externalContracts;

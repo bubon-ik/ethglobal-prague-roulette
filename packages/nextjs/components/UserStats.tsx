@@ -20,54 +20,53 @@ export const UserStats = () => {
 
   if (!address) {
     return (
-      <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title">Your Stats</h2>
-          <p className="text-center text-gray-500">Connect wallet to see stats</p>
+      <div className="bg-white rounded-2xl shadow-xl p-6 border-2 border-gray-200">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">📊 Your Stats</h2>
+        <div className="text-center text-gray-500 py-8">
+          <div className="text-4xl mb-4">🔗</div>
+          <p>Connect wallet to see your stats</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="card bg-base-100 shadow-xl">
-      <div className="card-body">
-        <h2 className="card-title">Your Stats</h2>
+    <div className="bg-white rounded-2xl shadow-xl p-6 border-2 border-blue-200">
+      <h2 className="text-xl font-bold text-gray-800 mb-4">📊 Your Stats</h2>
+      
+      <div className="space-y-4">
+        <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+          <span className="text-gray-700">🎯 Sites Discovered:</span>
+          <span className="font-bold text-blue-600 text-xl">{userSpins?.length || 0}</span>
+        </div>
         
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span>Sites Discovered:</span>
-            <span className="font-bold">{userSpins?.length || 0}</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Can Spin:</span>
-            <span className={`font-bold ${Number(timeUntilNextSpin) === 0 ? 'text-success' : 'text-warning'}`}>
-              {Number(timeUntilNextSpin) === 0 ? 'Yes' : 'No'}
-            </span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Wallet:</span>
-            <span className="font-mono text-xs">
-              {address.slice(0, 6)}...{address.slice(-4)}
-            </span>
+        <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+          <span className="text-gray-700">⚡ Can Spin:</span>
+          <span className={`font-bold text-lg ${Number(timeUntilNextSpin) === 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {Number(timeUntilNextSpin) === 0 ? '✅ Yes' : '❌ No'}
+          </span>
+        </div>
+        
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <div className="text-gray-700 text-sm mb-1">💳 Your Wallet:</div>
+          <div className="font-mono text-xs text-gray-600 break-all">
+            {address}
           </div>
         </div>
-
-        {userSpins && userSpins.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-bold mb-2">Recent Discoveries:</h3>
-            <div className="text-xs space-y-1">
-              {userSpins.slice(-3).reverse().map((spinId, index) => (
-                <div key={index} className="badge badge-outline badge-sm">
-                  Site #{spinId.toString()}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
+      {userSpins && userSpins.length > 0 && (
+        <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+          <h3 className="font-bold text-purple-800 text-sm mb-2">🏆 Recent Discoveries:</h3>
+          <div className="flex flex-wrap gap-1">
+            {userSpins.slice(-5).reverse().map((spinId, index) => (
+              <span key={index} className="inline-block bg-purple-200 text-purple-800 text-xs px-2 py-1 rounded">
+                #{spinId.toString()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

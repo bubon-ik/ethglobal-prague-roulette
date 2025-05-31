@@ -8,6 +8,7 @@ export const RouletteWheel = () => {
   const { address } = useAccount();
   const [isSpinning, setIsSpinning] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [lastSpinResult, setLastSpinResult] = useState<string | null>(null);
 
   const { data: sitesCount } = useScaffoldReadContract({
     contractName: "Roulette",
@@ -25,6 +26,7 @@ export const RouletteWheel = () => {
     contractName: "Roulette",
     functionName: "getUserSpins",
     args: [address],
+    watch: true,
   });
 
   const { data: lastSiteUrl } = useScaffoldReadContract({
@@ -32,6 +34,7 @@ export const RouletteWheel = () => {
     functionName: "getSite",
     args: [userSpins && userSpins.length > 0 ? userSpins[userSpins.length - 1] : BigInt(0)],
     enabled: !!(userSpins && userSpins.length > 0),
+    watch: true,
   });
 
   const { writeContractAsync: spin } = useScaffoldWriteContract("Roulette");
@@ -48,25 +51,45 @@ export const RouletteWheel = () => {
     return () => clearInterval(interval);
   }, [timeUntilNextSpin]);
 
+  // Обновленный форматтер времени для секунд
   const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    if (seconds < 60) {
+      return `${seconds} sec`;
+    }
+    const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleSpin = async () => {
     if (!address || isSpinning || timeLeft > 0) return;
 
     setIsSpinning(true);
+    setLastSpinResult(null);
+    
     try {
-      await spin({
+      const result = await spin({
         functionName: "spin",
         args: [],
       });
-      setIsSpinning(false);
+      
+      // Показываем успешное сообщение
+      setLastSpinResult("🎉 Spin successful! Check your latest discovery below!");
+      
+      // Автоматически скрываем сообщение через 3 секунды
+      setTimeout(() => {
+        setLastSpinResult(null);
+      }, 3000);
+      
     } catch (error) {
       console.error("Spin failed:", error);
+      setLastSpinResult("❌ Spin failed. Please try again!");
+      
+      // Скрываем ошибку через 3 секунды
+      setTimeout(() => {
+        setLastSpinResult(null);
+      }, 3000);
+    } finally {
       setIsSpinning(false);
     }
   };
@@ -75,49 +98,83 @@ export const RouletteWheel = () => {
 
   return (
     <div className="text-center">
+      {/* Title */}
+      <h2 className="text-3xl font-bold text-gray-800 mb-8">🎰 Spin the Roulette!</h2>
+      
+      {/* Spin Result Message */}
+      {lastSpinResult && (
+        <div className={`mb-6 p-4 rounded-lg border-2 ${
+          lastSpinResult.includes('successful') 
+            ? 'bg-green-50 border-green-300 text-green-800' 
+            : 'bg-red-50 border-red-300 text-red-800'
+        }`}>
+          {lastSpinResult}
+        </div>
+      )}
+      
       {/* Roulette Wheel */}
-      <div className="mb-12">
-        <div className={`relative mx-auto w-80 h-80 transition-all duration-1000 ${
+      <div className="mb-8">
+        <div className={`relative mx-auto w-64 h-64 transition-all duration-1000 ${
           isSpinning ? 'animate-spin' : ''
         }`}>
-          {/* Outer Ring */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 p-2">
-            <div className="w-full h-full rounded-full bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 p-4">
-              <div className="w-full h-full rounded-full bg-white/10 backdrop-blur-lg border-4 border-white/30 flex items-center justify-center">
-                <div className="text-8xl filter drop-shadow-lg">🎰</div>
-              </div>
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 p-3 shadow-2xl">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center border-4 border-gray-200 shadow-inner">
+              <div className="text-6xl filter drop-shadow-lg">🎰</div>
             </div>
           </div>
           
-          {/* Spinning indicator dots */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-yellow-400 rounded-full shadow-lg"></div>
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-red-400 rounded-full shadow-lg"></div>
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-blue-400 rounded-full shadow-lg"></div>
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-green-400 rounded-full shadow-lg"></div>
+          {/* Indicator Arrow */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-red-500 drop-shadow-lg"></div>
+          
+          {/* Decorative dots around the wheel */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-yellow-400 rounded-full"></div>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-green-400 rounded-full"></div>
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-red-400 rounded-full"></div>
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-blue-400 rounded-full"></div>
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200 shadow-sm">
+          <div className="text-3xl mb-1">🌐</div>
+          <div className="text-2xl font-bold text-blue-600">{sitesCount?.toString() || "0"}</div>
+          <div className="text-sm text-blue-800">Total Sites</div>
+        </div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200 shadow-sm">
+          <div className="text-3xl mb-1">🎯</div>
+          <div className="text-2xl font-bold text-green-600">{userSpins?.length || 0}</div>
+          <div className="text-sm text-green-800">Your Discoveries</div>
         </div>
       </div>
 
       {/* Spin Button */}
-      <div className="mb-8">
+      <div className="mb-6">
         {canSpin ? (
           <button
             onClick={handleSpin}
-            className="btn btn-lg px-12 py-4 text-2xl font-bold bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 border-0 text-white hover:scale-105 transform transition-all duration-200 shadow-2xl"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-xl shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-transparent hover:border-white/20"
           >
-            🎰 SPIN THE WHEEL! 🎰
+            🎰 SPIN NOW! 🎰
           </button>
         ) : (
-          <div className="text-center">
-            <div className="btn btn-disabled btn-lg px-12 py-4 text-xl mb-4">
-              {!address ? "🔗 CONNECT WALLET" : isSpinning ? "🌀 SPINNING..." : "⏰ COOLDOWN"}
+          <div>
+            <div className="w-full bg-gray-400 text-white font-bold py-4 px-8 rounded-xl text-xl mb-4 cursor-not-allowed opacity-75">
+              {!address ? "🔗 Connect Wallet First" : isSpinning ? "🌀 Spinning..." : "⏰ Cooldown Active"}
             </div>
             {timeLeft > 0 && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-                <div className="text-4xl font-mono text-yellow-400 font-bold mb-2">
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-lg p-4 shadow-sm">
+                <div className="text-3xl font-mono text-yellow-600 font-bold mb-1">
                   {formatTime(timeLeft)}
                 </div>
-                <div className="text-lg text-gray-300">
+                <div className="text-sm text-yellow-800">
                   ⏰ Next spin available in
+                </div>
+                <div className="mt-2 w-full bg-yellow-200 rounded-full h-2">
+                  <div 
+                    className="bg-yellow-500 h-2 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.max(0, 100 - (timeLeft / 10) * 100)}%` }}
+                  ></div>
                 </div>
               </div>
             )}
@@ -125,48 +182,33 @@ export const RouletteWheel = () => {
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-          <div className="text-3xl mb-2">🌐</div>
-          <div className="text-2xl font-bold text-yellow-400">{sitesCount?.toString() || "0"}</div>
-          <div className="text-sm text-gray-300">Total Sites</div>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-          <div className="text-3xl mb-2">🎯</div>
-          <div className="text-2xl font-bold text-blue-400">{userSpins?.length || 0}</div>
-          <div className="text-sm text-gray-300">Your Discoveries</div>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-          <div className="text-3xl mb-2">
-            {canSpin ? "🟢" : timeLeft > 0 ? "🟡" : "🔴"}
-          </div>
-          <div className="text-lg font-bold text-white">
-            {canSpin ? "Ready!" : timeLeft > 0 ? "Cooldown" : "Connect"}
-          </div>
-          <div className="text-sm text-gray-300">Status</div>
-        </div>
-      </div>
-
       {/* Latest Discovery */}
       {lastSiteUrl && (
-        <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-lg rounded-2xl p-6 border border-green-500/30">
-          <div className="text-2xl mb-3">🎉 Latest Discovery!</div>
-          <div className="text-sm text-gray-300 break-all mb-4 bg-black/20 rounded-lg p-3">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-6 shadow-sm">
+          <h3 className="font-bold text-green-800 mb-3 text-lg">🎉 Your Latest Discovery!</h3>
+          <div className="text-sm text-gray-700 break-all mb-4 bg-white rounded-lg p-3 border border-gray-200 font-mono">
             {lastSiteUrl}
           </div>
           <a 
             href={lastSiteUrl.startsWith('http') ? lastSiteUrl : `https://${lastSiteUrl}`}
             target="_blank" 
             rel="noopener noreferrer"
-            className="btn btn-success btn-sm"
+            className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
           >
             🚀 Visit Site
           </a>
         </div>
       )}
+
+      {/* Help Text */}
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="text-sm text-gray-600">
+          💡 <strong>How it works:</strong> Spin to discover new websites! You can spin once every <strong>10 seconds</strong>.
+        </div>
+        <div className="text-xs text-gray-500 mt-2">
+          Built on Flow EVM Testnet • ETHGlobal Prague 2025
+        </div>
+      </div>
     </div>
   );
 };
