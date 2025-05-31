@@ -74,90 +74,99 @@ export const RouletteWheel = () => {
   const canSpin = address && timeLeft === 0 && !isSpinning;
 
   return (
-    <div className="card bg-base-100 shadow-xl">
-      <div className="card-body items-center text-center">
-        <div className="mb-8">
-          <div className={`w-64 h-64 border-8 border-primary rounded-full flex items-center justify-center mb-6 transition-all duration-1000 ${
-            isSpinning ? 'animate-spin border-secondary' : ''
-          }`}>
-            <div className="text-6xl">🎰</div>
+    <div className="text-center">
+      {/* Roulette Wheel */}
+      <div className="mb-12">
+        <div className={`relative mx-auto w-80 h-80 transition-all duration-1000 ${
+          isSpinning ? 'animate-spin' : ''
+        }`}>
+          {/* Outer Ring */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 p-2">
+            <div className="w-full h-full rounded-full bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 p-4">
+              <div className="w-full h-full rounded-full bg-white/10 backdrop-blur-lg border-4 border-white/30 flex items-center justify-center">
+                <div className="text-8xl filter drop-shadow-lg">🎰</div>
+              </div>
+            </div>
           </div>
           
-          {canSpin ? (
-            <button
-              onClick={handleSpin}
-              className="btn btn-primary btn-lg w-48 text-xl"
-            >
-              SPIN THE WHEEL!
-            </button>
-          ) : (
-            <div className="text-center">
-              <div className="btn btn-disabled btn-lg w-48 text-xl mb-2">
-                {!address ? "CONNECT WALLET" : isSpinning ? "SPINNING..." : "COOLDOWN"}
-              </div>
-              {timeLeft > 0 && (
-                <div>
-                  <div className="text-2xl font-mono text-warning font-bold">
-                    {formatTime(timeLeft)}
-                  </div>
-                  <div className="text-sm opacity-70">
-                    Next spin available in
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="stats stats-vertical lg:stats-horizontal shadow">
-          <div className="stat">
-            <div className="stat-title">Total Sites</div>
-            <div className="stat-value text-primary">{sitesCount?.toString() || "0"}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-title">Your Discoveries</div>
-            <div className="stat-value text-secondary">{userSpins?.length || 0}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-title">Status</div>
-            <div className="stat-value text-sm">
-              {canSpin ? (
-                <span className="text-success">Ready!</span>
-              ) : timeLeft > 0 ? (
-                <span className="text-warning">Cooldown</span>
-              ) : (
-                <span className="text-info">Connect</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {lastSiteUrl && (
-          <div className="alert alert-success mt-6">
-            <div>
-              <h3 className="font-bold">🎉 Latest Discovery!</h3>
-              <div className="text-xs break-all">{lastSiteUrl}</div>
-              <div className="mt-2">
-                <a 
-                  href={lastSiteUrl.startsWith('http') ? lastSiteUrl : `https://${lastSiteUrl}`}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="btn btn-sm btn-primary"
-                >
-                  Visit Site
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="alert alert-info mt-6">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span>Spin the roulette to discover new websites! You can spin once every 12 hours.</span>
+          {/* Spinning indicator dots */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-yellow-400 rounded-full shadow-lg"></div>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-red-400 rounded-full shadow-lg"></div>
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-blue-400 rounded-full shadow-lg"></div>
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-green-400 rounded-full shadow-lg"></div>
         </div>
       </div>
+
+      {/* Spin Button */}
+      <div className="mb-8">
+        {canSpin ? (
+          <button
+            onClick={handleSpin}
+            className="btn btn-lg px-12 py-4 text-2xl font-bold bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 border-0 text-white hover:scale-105 transform transition-all duration-200 shadow-2xl"
+          >
+            🎰 SPIN THE WHEEL! 🎰
+          </button>
+        ) : (
+          <div className="text-center">
+            <div className="btn btn-disabled btn-lg px-12 py-4 text-xl mb-4">
+              {!address ? "🔗 CONNECT WALLET" : isSpinning ? "🌀 SPINNING..." : "⏰ COOLDOWN"}
+            </div>
+            {timeLeft > 0 && (
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div className="text-4xl font-mono text-yellow-400 font-bold mb-2">
+                  {formatTime(timeLeft)}
+                </div>
+                <div className="text-lg text-gray-300">
+                  ⏰ Next spin available in
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+          <div className="text-3xl mb-2">🌐</div>
+          <div className="text-2xl font-bold text-yellow-400">{sitesCount?.toString() || "0"}</div>
+          <div className="text-sm text-gray-300">Total Sites</div>
+        </div>
+        
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+          <div className="text-3xl mb-2">🎯</div>
+          <div className="text-2xl font-bold text-blue-400">{userSpins?.length || 0}</div>
+          <div className="text-sm text-gray-300">Your Discoveries</div>
+        </div>
+        
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+          <div className="text-3xl mb-2">
+            {canSpin ? "🟢" : timeLeft > 0 ? "🟡" : "🔴"}
+          </div>
+          <div className="text-lg font-bold text-white">
+            {canSpin ? "Ready!" : timeLeft > 0 ? "Cooldown" : "Connect"}
+          </div>
+          <div className="text-sm text-gray-300">Status</div>
+        </div>
+      </div>
+
+      {/* Latest Discovery */}
+      {lastSiteUrl && (
+        <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-lg rounded-2xl p-6 border border-green-500/30">
+          <div className="text-2xl mb-3">🎉 Latest Discovery!</div>
+          <div className="text-sm text-gray-300 break-all mb-4 bg-black/20 rounded-lg p-3">
+            {lastSiteUrl}
+          </div>
+          <a 
+            href={lastSiteUrl.startsWith('http') ? lastSiteUrl : `https://${lastSiteUrl}`}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-success btn-sm"
+          >
+            🚀 Visit Site
+          </a>
+        </div>
+      )}
     </div>
   );
 };
