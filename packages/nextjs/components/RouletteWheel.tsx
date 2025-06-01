@@ -7,20 +7,11 @@ import { useScaffoldWriteContract, useScaffoldReadContract } from "~~/hooks/scaf
 export const RouletteWheel = () => {
   const { address } = useAccount();
   const [isSpinning, setIsSpinning] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Добавляем refetch функции для принудительного обновления
   const { data: sitesCount, refetch: refetchSitesCount } = useScaffoldReadContract({
     contractName: "Roulette",
     functionName: "getSitesCount",
-    watch: true, // Автоматическое отслеживание изменений
-  });
-
-  const { data: timeUntilNextSpin, refetch: refetchTimeUntilNextSpin } = useScaffoldReadContract({
-    contractName: "Roulette",
-    functionName: "getTimeUntilNextSpin",
-    args: [address],
     watch: true,
   });
 
@@ -41,24 +32,10 @@ export const RouletteWheel = () => {
 
   const { writeContractAsync: spin } = useScaffoldWriteContract("Roulette");
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (timeUntilNextSpin && Number(timeUntilNextSpin) > 0) {
-        setTimeLeft(Number(timeUntilNextSpin));
-      } else {
-        setTimeLeft(0);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timeUntilNextSpin]);
-
-  // Функция для обновления всех данных
   const refreshAllData = async () => {
     try {
       await Promise.all([
         refetchSitesCount(),
-        refetchTimeUntilNextSpin(),
         refetchUserSpins(),
         refetchLastSite(),
       ]);
@@ -67,18 +44,13 @@ export const RouletteWheel = () => {
     }
   };
 
-  const formatTime = (seconds: number): string => {
-    return `${seconds}s`;
-  };
-
   const handleSpin = async () => {
-    if (!address || isSpinning || timeLeft > 0) return;
+    if (!address || isSpinning) return;
 
     setIsSpinning(true);
     setErrorMessage(null);
     
     try {
-      // Выполняем транзакцию
       const result = await spin({
         functionName: "spin",
         args: [],
@@ -86,9 +58,7 @@ export const RouletteWheel = () => {
 
       console.log("Spin transaction completed:", result);
 
-      // Ждем немного для майнинга блока
       setTimeout(async () => {
-        // Принудительно обновляем все данные
         await refreshAllData();
         setIsSpinning(false);
       }, 2000);
@@ -213,7 +183,7 @@ export const RouletteWheel = () => {
     );
   };
 
-  const canSpin = address && timeLeft === 0 && !isSpinning;
+  const canSpin = address && !isSpinning;
 
   return (
     <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 h-full flex flex-col">
@@ -276,25 +246,8 @@ export const RouletteWheel = () => {
             )}
           </button>
         ) : (
-          <div>
-            <div className="w-full bg-slate-700 text-gray-300 font-bold py-3 px-6 rounded-xl text-lg cursor-not-allowed opacity-75 text-center">
-              {!address ? "🔗 Connect Wallet" : isSpinning ? "🌀 Spinning..." : "⏰ Cooldown"}
-            </div>
-            
-            {timeLeft > 0 && !isSpinning && (
-              <div className="mt-3 bg-white/10 backdrop-blur border border-yellow-400/30 rounded-xl p-3 text-center">
-                <div className="text-2xl font-mono text-yellow-400 font-bold mb-1">
-                  {formatTime(timeLeft)}
-                </div>
-                <div className="text-xs text-gray-300 mb-2">Next spin in</div>
-                <div className="w-full bg-slate-700 rounded-full h-1">
-                  <div 
-                    className="bg-gradient-to-r from-yellow-400 to-orange-500 h-1 rounded-full transition-all duration-1000"
-                    style={{ width: `${Math.max(0, 100 - (timeLeft / 10) * 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
+          <div className="w-full bg-slate-700 text-gray-300 font-bold py-3 px-6 rounded-xl text-lg cursor-not-allowed opacity-75 text-center">
+            {!address ? "🔗 Connect Wallet" : isSpinning ? "🌀 Spinning..." : "⏰ Please wait..."}
           </div>
         )}
       </div>

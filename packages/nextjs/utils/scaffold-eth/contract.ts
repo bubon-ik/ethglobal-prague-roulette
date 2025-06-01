@@ -343,7 +343,12 @@ export const simulateContractWriteAndNotifyError = async ({
     await simulateContract(wagmiConfig, params);
   } catch (error) {
     const parsedError = getParsedError(error);
-    notification.error(parsedError);
+    if (parsedError.substring(65, 101) === "No new sites available for this user") {
+      notification.info("No new sites available for this user");
+    }
+    else { 
+      notification.error(parsedError);
+    }
     throw error;
   }
 };

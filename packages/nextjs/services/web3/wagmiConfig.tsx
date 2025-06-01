@@ -9,9 +9,9 @@ export const wagmiConfig = createConfig({
     coinbaseWallet({
       appName: 'Site Discovery Roulette',
     }),
-    walletConnect({
-      projectId: scaffoldConfig.walletConnectProjectId,
-    }),
+    // walletConnect({
+    //   projectId: scaffoldConfig.walletConnectProjectId,
+    // }),
   ],
   transports: {
     [scaffoldConfig.targetNetworks[0].id]: http(),

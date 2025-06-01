@@ -131,7 +131,8 @@ const Home: NextPage = () => {
         {/* Compact Footer */}
         <div className="text-center py-2">
           <p className="text-gray-500 text-xs">
-            Built on Flow EVM • ETHGlobal Prague 2025
+            🏆 Built for <span className="text-yellow-400 font-semibold">ETHGlobal Prague 2025</span> • 
+            Powered by <span className="text-blue-400 font-semibold">Flow EVM</span>
           </p>
         </div>
       </div>
