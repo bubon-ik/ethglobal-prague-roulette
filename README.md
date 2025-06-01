@@ -29,3 +29,40 @@ Site Discovery Roulette is a Web3 discovery platform that gamifies the explorati
 - **DAO Tools**: Governance platforms, treasury management
 - **Web3 Infrastructure**: Oracles, indexing protocols, developer tools
 - **Gaming & Metaverse**: Play-to-earn games, virtual worlds
+
+## 🌐 Live Demo
+
+- **Website**:  [https://roulette-dapp-seven.vercel.app/]
+- **Contract**: [View on FlowScan](https://evm-testnet.flowscan.io/address/0xf5c9b2c8747Bfc7f71bD911d5a134585fa69FFEf)
+
+## 🤝 Contributing
+
+We welcome contributions! Please feel free to submit a Pull Request.
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+
+## 🏆 ETHGlobal Prague 2025
+
+This project was built for ETHGlobal Prague 2025, showcasing:
+- **Flow EVM**: Leveraging low-cost, fast transactions
+- **Scaffold-ETH 2**: Rapid Web3 development framework
+- **Modern Web3 UX**: Seamless user experience for Web3 discovery
+
+## 🔗 Links
+
+- [Flow EVM Documentation](https://developers.flow.com/evm/about)
+- [Scaffold-ETH 2](https://scaffoldeth.io/)
+- [ETHGlobal Prague](https://ethglobal.com/events/prague)
+
+## 👥 Team
+
+Built by [bubon-ik] for ETHGlobal Prague 2025
+
+---
+
+**Made with ❤️ for the Web3 community**
